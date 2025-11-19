@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package ticket;
+
+option go_package = "github.com/cloudbees/train-ticket-service/api/ticket";
+
+// TicketService provides APIs for purchasing and managing train tickets
+service TicketService {
+  // PurchaseTicket - Public API to purchase a ticket
+  // Automatically assigns a seat and returns a receipt
+  rpc PurchaseTicket(PurchaseTicketRequest) returns (PurchaseTicketResponse);
+
+  // ViewUserReceipt - Authenticated API to view user's own receipt
+  // Reads user info from JWT in metadata
+  rpc ViewUserReceipt(ViewUserReceiptRequest) returns (ViewUserReceiptResponse);
+
+  // ViewAllocations - Admin API to view all seat allocations
+  // Can be filtered by section (A or B)
+  rpc ViewAllocations(ViewAllocationsRequest) returns (ViewAllocationsResponse);
+
+  // RemoveUserFromTrain - Authenticated API to remove a user from the train
+  // User can remove themselves, admin can remove any user
+  rpc RemoveUserFromTrain(RemoveUserFromTrainRequest) returns (RemoveUserFromTrainResponse);
+
+  // ModifyUserSeat - Authenticated API to modify a user's seat assignment
+  // User can modify their own seat, admin can modify any user's seat
+  rpc ModifyUserSeat(ModifyUserSeatRequest) returns (ModifyUserSeatResponse);
+}
+
+// PurchaseTicketRequest - Request to purchase a ticket
+message PurchaseTicketRequest {
+  string first_name = 1;
+  string last_name = 2;
+  string email = 3;
+}
+
+// PurchaseTicketResponse - Response containing the receipt
+message PurchaseTicketResponse {
+  Receipt receipt = 1;
+}
+
+// ViewUserReceiptRequest - Request to view user's receipt (empty, uses JWT)
+message ViewUserReceiptRequest {
+  // Empty - user info comes from JWT metadata
+}
+
+// ViewUserReceiptResponse - Response containing the user's receipt
+message ViewUserReceiptResponse {
+  Receipt receipt = 1;
+}
+
+// ViewAllocationsRequest - Request to view all allocations
+message ViewAllocationsRequest {
+  // Optional: filter by section (A or B). Empty means all sections
+  string section = 1;
+}
+
+// ViewAllocationsResponse - Response containing all allocations
+message ViewAllocationsResponse {
+  repeated Allocation allocations = 1;
+}
+
+// Allocation - Represents a seat allocation
+message Allocation {
+  string section = 1;
+  int32 seat_number = 2;
+  User user = 3;
+}
+
+// RemoveUserFromTrainRequest - Request to remove a user from the train
+message RemoveUserFromTrainRequest {
+  // Optional: email of user to remove (for admin). If empty, removes the user from JWT
+  string email = 1;
+}
+
+// RemoveUserFromTrainResponse - Response for removal operation
+message RemoveUserFromTrainResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ModifyUserSeatRequest - Request to modify a user's seat
+message ModifyUserSeatRequest {
+  // Optional: email of user to modify (for admin). If empty, modifies the user from JWT
+  string email = 1;
+  string section = 2;  // New section (A or B)
+  int32 seat_number = 3;  // New seat number (1-10)
+}
+
+// ModifyUserSeatResponse - Response containing updated receipt
+message ModifyUserSeatResponse {
+  Receipt receipt = 1;
+}
+
+// Receipt - Represents a ticket receipt
+message Receipt {
+  string from = 1;  // "London"
+  string to = 2;    // "France"
+  User user = 3;
+  int32 price_paid = 4;  // in cents, so $20 = 2000
+  Seat seat = 5;
+}
+
+// User - Represents a user
+message User {
+  string first_name = 1;
+  string last_name = 2;
+  string email = 3;
+}
+
+// Seat - Represents a seat assignment
+message Seat {
+  string section = 1;  // "A" or "B"
+  int32 seat_number = 2;  // 1-10
+}
+
+
+
+
+
